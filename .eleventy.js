@@ -1,26 +1,7 @@
-const { readFileSync, existsSync } = require('fs')
-const merge = require('deepmerge')
-const postcss = require('postcss')
+const { readFileSync } = require('fs')
 const postcssrc = require('postcss-load-config')
-const AtImport = require('postcss-import')
 
-class EngineCSS {
-  setPlugins(plugins) {
-    this.plugins = plugins
-  }
-
-  setOptions(options) {
-    this.options = options
-  }
-
-  async processCSS(src, inputPath){
-    let plugins = this.plugins
-    plugins.unshift(AtImport({
-      path: ['src/views/css']
-    }))
-    return postcss(this.plugins).process(src, {from: inputPath}).then(result => result.css)
-  }
-}
+const EngineCSS = require('./EngineCSS.js')
 
 module.exports = (config) => {
   const engine = new EngineCSS();
@@ -30,6 +11,9 @@ module.exports = (config) => {
   config.addExtension('css', {
     read: true,
     init: async function() {
+      engine.setInputDir(this.config.inputDir)
+      engine.setIncludesDir(this.config.dir.includes)
+
       postcssrc().then(({plugins, options}) => {
         engine.setPlugins(plugins)
         engine.setOptions(options)
@@ -40,16 +24,15 @@ module.exports = (config) => {
         if (str) {
           if (typeof str === "function") return str(data);
 
-          if(typeof str === "string" && str.trim().charAt("0") === "@") {
-            return engine.processCSS(str, inputPath)
+          if (typeof str === "string" && str.trim().charAt("0") === "@") {
+            return engine.processCSS(str, {inputPath, outputPath: data.page.outputPath})
           }
 
           return str;
         }
 
         const css = readFileSync(inputPath, 'utf8')
-        return engine.processCSS(css, inputPath)
-
+        return engine.processCSS(css, {inputPath, outputPath: data.page.outputPath})
       }
     }
   })
