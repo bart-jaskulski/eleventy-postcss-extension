@@ -11,8 +11,9 @@ function isPluginActive(plugin) {
 
 class EngineCSS {
   async processCSS(src, { inputPath, outputPath }) {
-    const config = merge({}, this.options, { from: inputPath, to: outputPath });
+    if (!this.plugins) throw new Error('Could not successfuly read postcss config file');
 
+    const config = merge({}, this.options, { from: inputPath, to: outputPath });
     return postcss(this.plugins)
       .process(src, config)
       .then((result) => result.css);
