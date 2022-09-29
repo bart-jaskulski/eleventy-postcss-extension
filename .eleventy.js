@@ -25,7 +25,7 @@ module.exports = (config) => {
       const parsed = parse(inputPath)
       if (parsed.name.startsWith('_')) return
 
-      return async ({page}) => engine.processCSS(input, {inputPath, outputPath: page.outputPath})
+      return async ({page}) => engine.processCSS(input, {inputPath, outputPath: page && page.outputPath})
     }
   })
 }
